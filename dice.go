@@ -101,13 +101,13 @@ type DiceOption func(*dice)
 
 // roll is an implementation of the Roll interface
 type roll struct {
-	rollType          RollType // Type of roll (ROLL_ONCE, ROLL_ADVANTAGE, ROLL_DISADVANTATE)
-	rollValues        []int    // The values rolled for the dice, if rolled with advantage or disadvantage
-	rollValue         int      // The roll of the dice, not including all modifiers
-	allowsCriticalHit bool     // If true, the dice allows for a critical hit
-	criticalHit       int      // The value for a critical hit; defaults to 20
-	criticalMiss      int      // The value for a critical miss; defaults to 1
-	dice              *dice    // The dice used for the roll
+	rollType           RollType // Type of roll (ROLL_ONCE, ROLL_ADVANTAGE, ROLL_DISADVANTATE)
+	rollValues         []int    // The values rolled for the dice, if rolled with advantage or disadvantage
+	rollValue          int      // The roll of the dice, not including all modifiers
+	criticalHitAllowed bool     // If true, the dice allows for a critical hit
+	criticalHit        int      // The value for a critical hit; defaults to 20
+	criticalMiss       int      // The value for a critical miss; defaults to 1
+	dice               *dice    // The dice used for the roll
 }
 
 type RollOption func(*roll)
@@ -248,12 +248,12 @@ func (d *dice) GetDice() []Dice {
 // without a base damage.
 func (d *dice) Roll(opts ...RollOption) Roll {
 	r := &roll{
-		dice:              d,
-		rollType:          ROLL_ONCE,
-		rollValues:        make([]int, 0, 2),
-		allowsCriticalHit: false,
-		criticalHit:       CRITICAL_HIT,
-		criticalMiss:      CRITICAL_MISS,
+		dice:               d,
+		rollType:           ROLL_ONCE,
+		rollValues:         make([]int, 0, 2),
+		criticalHitAllowed: false,
+		criticalHit:        CRITICAL_HIT,
+		criticalMiss:       CRITICAL_MISS,
 	}
 	d.roll = r
 
@@ -369,7 +369,7 @@ func WithLuck() DiceOption {
 // Defaults to 20.
 func WithCriticalHit(value int) RollOption {
 	return func(r *roll) {
-		r.allowsCriticalHit = true
+		r.criticalHitAllowed = true
 		r.criticalHit = value
 	}
 }
@@ -379,7 +379,7 @@ func WithCriticalHit(value int) RollOption {
 // Defaults to 1.
 func WithCriticalMiss(value int) RollOption {
 	return func(r *roll) {
-		r.allowsCriticalHit = true
+		r.criticalHitAllowed = true
 		r.criticalMiss = value
 	}
 }
@@ -397,12 +397,12 @@ func (r *roll) Value() int {
 
 // IsCriticalHit returns `true` if the roll was a critical hit; `false` otherwise
 func (r *roll) IsCriticalHit() bool {
-	return r.allowsCriticalHit && mathx.Abs(r.rollValue) >= r.criticalHit && r.dice.isD20()
+	return r.criticalHitAllowed && mathx.Abs(r.rollValue) >= r.criticalHit && r.dice.isD20()
 }
 
 // IsCriticalMiss returns `true` if the roll was a critical miss; `false` otherwise
 func (r *roll) IsCriticalMiss() bool {
-	return r.allowsCriticalHit && r.rollValue <= r.criticalMiss && r.dice.isD20()
+	return r.criticalHitAllowed && r.rollValue <= r.criticalMiss && r.dice.isD20()
 }
 
 // RolledWithAdvantage returns `true` if the roll was made with advantage; `false` otherwise
