@@ -99,16 +99,6 @@ type dice struct {
 // DiceOption is a function that modifies the default values of a dice.
 type DiceOption func(*dice)
 
-// singleRoll represents a single roll of the dice. Whenn rolling a dice, there may be one roll or,
-// if rolling with advantage or disadvantage, two rolls.
-type singleRoll struct {
-	value              int   // The value of the roll
-	criticalHitAllowed bool  // If true, the roll allows for a critical hit
-	criticalHit        int   // The value for a critical hit; defaults to 20
-	criticalMiss       int   // The value for a critical miss; defaults to 1
-	dice               *dice // The dice used for the roll
-}
-
 // roll is an implementation of the Roll interface
 type roll struct {
 	rollType           RollType      // Type of roll (ROLL_ONCE, ROLL_ADVANTAGE, ROLL_DISADVANTATE)
@@ -118,6 +108,16 @@ type roll struct {
 	criticalHit        int           // The value for a critical hit; defaults to 20
 	criticalMiss       int           // The value for a critical miss; defaults to 1
 	dice               *dice         // The dice used for the roll
+}
+
+// singleRoll represents a single roll of the dice. Whenn rolling a dice, there may be one roll or,
+// if rolling with advantage or disadvantage, two rolls.
+type singleRoll struct {
+	value              int   // The value of the roll
+	criticalHitAllowed bool  // If true, the roll allows for a critical hit
+	criticalHit        int   // The value for a critical hit; defaults to 20
+	criticalMiss       int   // The value for a critical miss; defaults to 1
+	dice               *dice // The dice used for the roll
 }
 
 // RollOption is a function that can modify the default values of a roll.
@@ -523,9 +523,19 @@ func (r *singleRoll) Check(v Value) bool {
 	return v.Value() >= r.Value()
 }
 
-// ReRoll returns the original single roll of the dice.
+// ReRoll returns a new roll of the dice.
 func (r *singleRoll) ReRoll(opts ...RollOption) Roll {
-	return r
+	// Re-roll using a `roll` object. The first roll is always a single roll, so return that.
+	oldRoll := &roll{
+		rollType:           ROLL_ONCE,
+		rolls:              make([]*singleRoll, 0, 1),
+		criticalHit:        r.criticalHit,
+		criticalMiss:       r.criticalMiss,
+		criticalHitAllowed: r.criticalHitAllowed,
+		dice:               r.dice,
+	}
+	newRoll := oldRoll.ReRoll(opts...)
+	return newRoll.GetAllRolls()[0]
 }
 
 // getDiceString returns a string representation of the dice. This includes both
