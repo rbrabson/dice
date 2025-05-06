@@ -523,9 +523,9 @@ func (r *singleRoll) Check(v Value) bool {
 	return v.Value() >= r.Value()
 }
 
-// ReRoll re-rolls the dice with the provided options, returning the new Roll.
+// ReRoll returns the original single roll of the dice.
 func (r *singleRoll) ReRoll(opts ...RollOption) Roll {
-	return r.dice.Roll(opts...)
+	return r
 }
 
 // getDiceString returns a string representation of the dice. This includes both
