@@ -411,7 +411,7 @@ func (r *roll) IsCriticalHit() bool {
 
 // IsCriticalMiss returns `true` if the roll was a critical miss; `false` otherwise
 func (r *roll) IsCriticalMiss() bool {
-	return r.criticalHitAllowed && r.rollValue <= r.criticalMiss && r.dice.isD20()
+	return r.criticalHitAllowed && mathx.Abs(r.rollValue) <= r.criticalMiss && r.dice.isD20()
 }
 
 // RolledWithAdvantage returns `true` if the roll was made with advantage; `false` otherwise
