@@ -111,5 +111,5 @@ func TestDiceSetDebuff(t *testing.T) {
 		t.Errorf("Expected roll to be a debuff, got %s", r.String())
 
 	}
-	fmt.Println(r.GetAllRolls())
+	fmt.Println("GetAllRolls", r.GetAllRolls())
 }

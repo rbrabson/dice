@@ -131,12 +131,8 @@ func (ds diceSet) IsLucky() bool {
 }
 
 // GetAllRolls returns all the roll values in the roll set.
-func (rs rollSet) GetAllRolls() []int {
-	rollValues := make([]int, len(rs))
-	for _, r := range rs {
-		rollValues = append(rollValues, r.Value())
-	}
-	return rollValues
+func (rs rollSet) GetAllRolls() []Roll {
+	return rs
 }
 
 // RolledWithDisadvantage checks if the roll was made with disadvantage.

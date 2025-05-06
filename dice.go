@@ -75,7 +75,7 @@ type Dice interface {
 // Roll is a roll of a Dice
 type Roll interface {
 	Value
-	GetAllRolls() []int           // Gets the rolls for the dice; there may be two rolls if rolling with advantage/disadvantage
+	GetAllRolls() []Roll          // Gets the rolls for the dice; there may be two rolls if rolling with advantage/disadvantage
 	RolledWithDisadvantage() bool // Returns true if the roll was made with disadvantage
 	RolledWithAdvantage() bool    // Returns true if the roll was made with advantage
 	ReRoll(...RollOption) Roll    // Re-rolls the dice with the provided options, returning a new Roll
@@ -99,15 +99,25 @@ type dice struct {
 // DiceOption is a function that modifies a dice.
 type DiceOption func(*dice)
 
+// singleRoll represents a single roll of the dice. Whenn rolling a dice, there may be one roll or,
+// if rolling with advantage or disadvantage, two rolls.
+type singleRoll struct {
+	value              int   // The value of the roll
+	criticalHitAllowed bool  // If true, the roll allows for a critical hit
+	criticalHit        int   // The value for a critical hit; defaults to 20
+	criticalMiss       int   // The value for a critical miss; defaults to 1
+	dice               *dice // The dice used for the roll
+}
+
 // roll is an implementation of the Roll interface
 type roll struct {
-	rollType           RollType // Type of roll (ROLL_ONCE, ROLL_ADVANTAGE, ROLL_DISADVANTATE)
-	rollValues         []int    // The values rolled for the dice, if rolled with advantage or disadvantage
-	rollValue          int      // The roll of the dice, not including all modifiers
-	criticalHitAllowed bool     // If true, the dice allows for a critical hit
-	criticalHit        int      // The value for a critical hit; defaults to 20
-	criticalMiss       int      // The value for a critical miss; defaults to 1
-	dice               *dice    // The dice used for the roll
+	rollType           RollType      // Type of roll (ROLL_ONCE, ROLL_ADVANTAGE, ROLL_DISADVANTATE)
+	rolls              []*singleRoll // The values rolled for the dice, if rolled with advantage or disadvantage
+	value              int           // The value of the roll
+	criticalHitAllowed bool          // If true, the dice allows for a critical hit
+	criticalHit        int           // The value for a critical hit; defaults to 20
+	criticalMiss       int           // The value for a critical miss; defaults to 1
+	dice               *dice         // The dice used for the roll
 }
 
 type RollOption func(*roll)
@@ -250,7 +260,7 @@ func (d *dice) Roll(opts ...RollOption) Roll {
 	r := &roll{
 		dice:               d,
 		rollType:           ROLL_ONCE,
-		rollValues:         make([]int, 0, 2),
+		rolls:              make([]*singleRoll, 0, 2),
 		criticalHit:        CRITICAL_HIT,
 		criticalMiss:       CRITICAL_MISS,
 		criticalHitAllowed: false,
@@ -263,14 +273,14 @@ func (d *dice) Roll(opts ...RollOption) Roll {
 
 	switch r.rollType {
 	case ROLL_WITH_ADVANTAGE:
-		r.rollValues = []int{d.rollDice(), d.rollDice()}
-		r.rollValue = max(r.rollValues[0], r.rollValues[1])
+		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
+		r.value = max(r.rolls[0].value, r.rolls[1].value)
 	case ROLL_WITH_DISADVANTAGE:
-		r.rollValues = []int{d.rollDice(), d.rollDice()}
-		r.rollValue = min(r.rollValues[0], r.rollValues[1])
+		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
+		r.value = min(r.rolls[0].Value(), r.rolls[1].value)
 	default:
-		r.rollValues = []int{d.rollDice()}
-		r.rollValue = r.rollValues[0]
+		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
+		r.value = r.rolls[0].value
 	}
 
 	return r
@@ -313,7 +323,7 @@ func (d *dice) Source() string {
 }
 
 // rollDice rolls the dice and returns the value. If the dice is lucky, it will re-roll if it rolls a 1.
-func (d *dice) rollDice() int {
+func (d *dice) rollDice(criticalHitAllowed bool, criticalHit int, criticalMiss int) *singleRoll {
 	value := d.modifier
 	for range d.numDice {
 		rollValue := rand.Intn(d.numSides) + 1 // rand.Intn returns a value in the range [0, n), so we add 1 to get [1, n]
@@ -323,11 +333,16 @@ func (d *dice) rollDice() int {
 		}
 		value += rollValue
 	}
-	if d.isDebuff {
-		value *= -1
+
+	roll := &singleRoll{
+		value:              value,
+		dice:               d,
+		criticalHitAllowed: criticalHitAllowed,
+		criticalHit:        criticalHit,
+		criticalMiss:       criticalMiss,
 	}
 
-	return value
+	return roll
 }
 
 // isD20 checks if the dice is a D20. This is used to determine if the roll was a critical hit or miss.
@@ -395,23 +410,30 @@ func WithCriticalHitAllowed() RollOption {
 
 // GetAllRolls returns all rolls for the dice. If a dice is rolled with advantage or disadvantage
 // then two rolls will be returned. Otherwise, a single roll is included.
-func (r *roll) GetAllRolls() []int {
-	return r.rollValues
+func (r *roll) GetAllRolls() []Roll {
+	rolls := make([]Roll, 0, len(r.rolls))
+	for _, roll := range r.rolls {
+		rolls = append(rolls, roll)
+	}
+	return rolls
 }
 
 // Value gets the value of the roll, including the modifiers.
 func (r *roll) Value() int {
-	return r.rollValue
+	if !r.dice.isDebuff {
+		return r.value
+	}
+	return -1 * r.value
 }
 
 // IsCriticalHit returns `true` if the roll was a critical hit; `false` otherwise
 func (r *roll) IsCriticalHit() bool {
-	return r.criticalHitAllowed && mathx.Abs(r.rollValue) >= r.criticalHit && r.dice.isD20()
+	return r.criticalHitAllowed && r.value >= r.criticalHit && r.dice.isD20()
 }
 
 // IsCriticalMiss returns `true` if the roll was a critical miss; `false` otherwise
 func (r *roll) IsCriticalMiss() bool {
-	return r.criticalHitAllowed && mathx.Abs(r.rollValue) <= r.criticalMiss && r.dice.isD20()
+	return r.criticalHitAllowed && r.value <= r.criticalMiss && r.dice.isD20()
 }
 
 // RolledWithAdvantage returns `true` if the roll was made with advantage; `false` otherwise
@@ -445,6 +467,68 @@ func (r *roll) Check(v Value) bool {
 	return v.Value() >= r.Value()
 }
 
+// GetAllRolls returns all rolls for the dice. If a dice is rolled with advantage or disadvantage
+// then two rolls will be returned. Otherwise, a single roll is included.
+func (r *singleRoll) GetAllRolls() []Roll {
+	return []Roll{r}
+}
+
+// Value gets the value of the roll, including the modifiers.
+func (r *singleRoll) Value() int {
+	if !r.dice.isDebuff {
+		return r.value
+	}
+	return -1 * r.value
+}
+
+// IsCriticalHit returns `true` if the roll was a critical hit; `false` otherwise
+func (r *singleRoll) IsCriticalHit() bool {
+	return r.criticalHitAllowed && r.value >= r.criticalHit && r.dice.isD20()
+}
+
+// IsCriticalMiss returns `true` if the roll was a critical miss; `false` otherwise
+func (r *singleRoll) IsCriticalMiss() bool {
+	return r.criticalHitAllowed && r.value <= r.criticalMiss && r.dice.isD20()
+}
+
+// RolledWithAdvantage returns `true` if the roll was made with advantage; `false` otherwise
+func (r *singleRoll) RolledWithAdvantage() bool {
+	return false
+}
+
+// RolledWithDisadvantage returns `true` if the roll was made with disadvantage; `false` otherwise
+func (r *singleRoll) RolledWithDisadvantage() bool {
+	return false
+}
+
+// GetType gets the type of roll (ROLL_ONCE, ROLL_WITH_ADVANTAGE, ROLL_WITH_DISADVANTATE)
+func (r *singleRoll) GetType() RollType {
+	return ROLL_ONCE
+}
+
+// GetDice gets the dice that was used for this roll.
+func (r *singleRoll) GetDice() Dice {
+	return r.dice
+}
+
+// Check checks if the value meets or exceeds the roll.
+func (r *singleRoll) Check(v Value) bool {
+	if v.IsCriticalHit() {
+		return true
+	}
+	if v.IsCriticalMiss() {
+		return false
+	}
+	return v.Value() >= r.Value()
+}
+
+// ReRoll re-rolls the dice with the provided options, returning the new Roll.
+func (r *singleRoll) ReRoll(opts ...RollOption) Roll {
+	return r.dice.Roll(opts...)
+}
+
+// getDiceString returns a string representation of the dice. This includes both
+// the dice as well as the modifier.
 func getDiceString(numDice, numSides, modifier int) string {
 	var sb strings.Builder
 	if numDice > 0 {
@@ -514,6 +598,56 @@ func (r *roll) String() string {
 // the roll as well as the source of the dice (if provided), but not the
 // value of the roll.
 func (r *roll) Str() string {
+	var sb strings.Builder
+
+	sb.WriteString(strconv.Itoa(mathx.Abs(r.Value())))
+	switch {
+	case r.IsCriticalHit():
+		sb.WriteString(" (Critical!)")
+	case r.IsCriticalMiss():
+		sb.WriteString(" (Miss!)")
+	case !r.dice.IsConstant():
+		sb.WriteString(" (")
+		sb.WriteString(getDiceString(r.dice.numDice, r.dice.numSides, r.dice.modifier))
+		if r.dice.Source() != "" {
+			sb.WriteString(", ")
+			sb.WriteString(r.dice.Source())
+		}
+		switch {
+		case r.RolledWithAdvantage():
+			sb.WriteString(", Advantage")
+		case r.RolledWithDisadvantage():
+			sb.WriteString(", Disadvantage")
+		}
+		sb.WriteString(")")
+	case r.dice.Source() != "":
+		sb.WriteString(" (")
+		sb.WriteString(r.dice.Source())
+		sb.WriteString(")")
+	}
+
+	return sb.String()
+}
+
+// String returns a string representation of the roll. This includes both
+// the roll, the source of the dice (if provided), and the value of the roll.
+func (r *singleRoll) String() string {
+	var sb strings.Builder
+
+	if r.Value() < 0 {
+		sb.WriteString("-")
+	}
+	sb.WriteString(r.Str())
+	sb.WriteString(" = ")
+	sb.WriteString(strconv.Itoa(r.Value()))
+
+	return sb.String()
+}
+
+// Str returns a Str representation of the roll. This includes both
+// the roll as well as the source of the dice (if provided), but not the
+// value of the roll.
+func (r *singleRoll) Str() string {
 	var sb strings.Builder
 
 	sb.WriteString(strconv.Itoa(mathx.Abs(r.Value())))
