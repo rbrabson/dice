@@ -96,7 +96,7 @@ type dice struct {
 	isDebuff bool   // The dice roll is negated
 }
 
-// DiceOption is a function that modifies a dice.
+// DiceOption is a function that modifies the default values of a dice.
 type DiceOption func(*dice)
 
 // singleRoll represents a single roll of the dice. Whenn rolling a dice, there may be one roll or,
@@ -120,6 +120,7 @@ type roll struct {
 	dice               *dice         // The dice used for the roll
 }
 
+// RollOption is a function that can modify the default values of a roll.
 type RollOption func(*roll)
 
 // NewDice returns a multi-sided dice with an optional base damage that may be rolled for a value.
