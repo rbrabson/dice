@@ -251,9 +251,9 @@ func (d *dice) Roll(opts ...RollOption) Roll {
 		dice:               d,
 		rollType:           ROLL_ONCE,
 		rollValues:         make([]int, 0, 2),
-		criticalHitAllowed: false,
 		criticalHit:        CRITICAL_HIT,
 		criticalMiss:       CRITICAL_MISS,
+		criticalHitAllowed: false,
 	}
 	d.roll = r
 
@@ -381,6 +381,15 @@ func WithCriticalMiss(value int) RollOption {
 	return func(r *roll) {
 		r.criticalHitAllowed = true
 		r.criticalMiss = value
+	}
+}
+
+// WithCriticalHitAllowed sets the roll to allow for critical hits and misses. If set, a roll on a D20
+// that is greater than or equal to the critical hit value will be considered a critical hit, and the
+// roll that is less than or equal to the critical miss value will be considered a critical miss.
+func WithCriticalHitAllowed() RollOption {
+	return func(r *roll) {
+		r.criticalHitAllowed = true
 	}
 }
 
