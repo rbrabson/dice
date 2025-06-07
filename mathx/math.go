@@ -7,7 +7,7 @@ type Number interface {
 		~float32 | ~float64
 }
 
-// ABS returns the absolute value of a number.
+// Abs returns the absolute value of a number.
 func Abs[T Number](x T) T {
 	return AbsDiff(x, 0)
 }

@@ -152,8 +152,8 @@ func (rs rollSet) ReRoll(opts ...RollOption) Roll {
 }
 
 // GetType returns `ROLL_ONCE` for the roll set, as it is a single roll.
-func (r rollSet) GetType() RollType {
-	return ROLL_ONCE
+func (rs rollSet) GetType() RollType {
+	return RollOnce
 }
 
 // GetDice returns the set of dice that were rolled in the roll set.
@@ -170,7 +170,7 @@ func (ds diceSet) String() string {
 	return ds.Str()
 }
 
-// String returns a Str representation of the dice set.
+// Str returns a string representation of the dice set.
 func (ds diceSet) Str() string {
 	var sb strings.Builder
 	for i, d := range ds {

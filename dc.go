@@ -6,7 +6,7 @@ import (
 )
 
 // DifficultyClass identifies the value a roll of a dice must meet or exceed
-// in order to be successful.
+// to be successful.
 type DifficultyClass interface {
 	Value
 	fmt.Stringer // String returns a string value for the difficulty class

@@ -44,14 +44,14 @@ var (
 type RollType int
 
 const (
-	ROLL_ONCE              RollType = iota // Single dice is rolled
-	ROLL_WITH_ADVANTAGE                    // Two dice are rolled, the highest value is used
-	ROLL_WITH_DISADVANTAGE                 // Two dice are rolled, the lowest value is used
+	RollOnce             RollType = iota // Single dice is rolled
+	RollWithAdvantage                    // Two dice are rolled, the highest value is used
+	RollWithDisadvantage                 // Two dice are rolled, the lowest value is used
 )
 
 const (
-	CRITICAL_HIT  = 20 // The value for a critical hit; this is the highest value that can be rolled on a D20
-	CRITICAL_MISS = 1  // The value for a critical miss; this is the lowest value that can be rolled on a
+	CriticalHit  = 20 // The value for a critical hit; this is the highest value that can be rolled on a D20
+	CriticalMiss = 1  // The value for a critical miss; this is the lowest value that can be rolled on a
 )
 
 // Dice is a multi-sided ice that can be rolled for a value, both for a base value or with
@@ -260,10 +260,10 @@ func (d *dice) GetDice() []Dice {
 func (d *dice) Roll(opts ...RollOption) Roll {
 	r := &roll{
 		dice:               d,
-		rollType:           ROLL_ONCE,
+		rollType:           RollOnce,
 		rolls:              make([]*singleRoll, 0, 2),
-		criticalHit:        CRITICAL_HIT,
-		criticalMiss:       CRITICAL_MISS,
+		criticalHit:        CriticalHit,
+		criticalMiss:       CriticalMiss,
 		criticalHitAllowed: false,
 	}
 	d.roll = r
@@ -273,10 +273,10 @@ func (d *dice) Roll(opts ...RollOption) Roll {
 	}
 
 	switch r.rollType {
-	case ROLL_WITH_ADVANTAGE:
+	case RollWithAdvantage:
 		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
 		r.value = max(r.rolls[0].value, r.rolls[1].value)
-	case ROLL_WITH_DISADVANTAGE:
+	case RollWithDisadvantage:
 		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
 		r.value = min(r.rolls[0].Value(), r.rolls[1].value)
 	default:
@@ -354,10 +354,10 @@ func (d *dice) isD20() bool {
 // WithAdvantage rolls the dice with advantage. The dice will be rolled twice, and the highest value will be used.
 func WithAdvantage() RollOption {
 	return func(r *roll) {
-		if r.rollType == ROLL_WITH_DISADVANTAGE {
-			r.rollType = ROLL_ONCE
+		if r.rollType == RollWithDisadvantage {
+			r.rollType = RollOnce
 		} else {
-			r.rollType = ROLL_WITH_ADVANTAGE
+			r.rollType = RollWithAdvantage
 		}
 	}
 }
@@ -365,15 +365,15 @@ func WithAdvantage() RollOption {
 // WithDisadvantage rolls the dice with disadvantage. The dice will be rolled twice, and the lowest value will be used.
 func WithDisadvantage() RollOption {
 	return func(r *roll) {
-		if r.rollType == ROLL_WITH_ADVANTAGE {
-			r.rollType = ROLL_ONCE
+		if r.rollType == RollWithAdvantage {
+			r.rollType = RollOnce
 		} else {
-			r.rollType = ROLL_WITH_DISADVANTAGE
+			r.rollType = RollWithDisadvantage
 		}
 	}
 }
 
-// WithRollType sets the dice to be lucky. If the dice rolls a 1, it will be re-rolled one more time and the new value will be used.
+// WithLuck sets the dice to be lucky. If the dice rolls a 1, it will be re-rolled one more time and the new value will be used.
 func WithLuck() DiceOption {
 	return func(d *dice) {
 		d.isLucky = true
@@ -439,12 +439,12 @@ func (r *roll) IsCriticalMiss() bool {
 
 // RolledWithAdvantage returns `true` if the roll was made with advantage; `false` otherwise
 func (r *roll) RolledWithAdvantage() bool {
-	return r.rollType == ROLL_WITH_ADVANTAGE
+	return r.rollType == RollWithAdvantage
 }
 
 // RolledWithDisadvantage returns `true` if the roll was made with disadvantage; `false` otherwise
 func (r *roll) RolledWithDisadvantage() bool {
-	return r.rollType == ROLL_WITH_DISADVANTAGE
+	return r.rollType == RollWithDisadvantage
 }
 
 // GetType gets the type of roll (ROLL_ONCE, ROLL_WITH_ADVANTAGE, ROLL_WITH_DISADVANTATE)
@@ -504,7 +504,7 @@ func (r *singleRoll) RolledWithDisadvantage() bool {
 
 // GetType gets the type of roll (ROLL_ONCE, ROLL_WITH_ADVANTAGE, ROLL_WITH_DISADVANTATE)
 func (r *singleRoll) GetType() RollType {
-	return ROLL_ONCE
+	return RollOnce
 }
 
 // GetDice gets the dice that was used for this roll.
@@ -527,7 +527,7 @@ func (r *singleRoll) Check(v Value) bool {
 func (r *singleRoll) ReRoll(opts ...RollOption) Roll {
 	// Re-roll using a `roll` object. The first roll is always a single roll, so return that.
 	oldRoll := &roll{
-		rollType:           ROLL_ONCE,
+		rollType:           RollOnce,
 		rolls:              make([]*singleRoll, 0, 1),
 		criticalHit:        r.criticalHit,
 		criticalMiss:       r.criticalMiss,
@@ -575,8 +575,8 @@ func (d *dice) String() string {
 	return sb.String()
 }
 
-// String returns a Str representation of the dice. This includes both
-// the dice as well as the source of the dice (if provided).
+// Str returns a string representation of the dice. This includes both
+// the dice and the source of the dice (if provided).
 func (d *dice) Str() string {
 	var sb strings.Builder
 	sb.WriteString(getDiceString(d.numDice, d.numSides, d.modifier))
