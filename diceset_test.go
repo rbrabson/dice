@@ -96,6 +96,11 @@ func TestDiceSetIsDebuff(t *testing.T) {
 	if emptySet.IsDebuff() {
 		t.Errorf("Expected empty dice set to not be a debuff")
 	}
+
+	roll := allDebuff.Roll()
+	if roll.Value() > 0 {
+		t.Error("Expected dice rolled as a debuff to be negative")
+	}
 }
 
 // TestDiceSetIsLucky tests the IsLucky method of diceSet
