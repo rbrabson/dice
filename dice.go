@@ -339,6 +339,11 @@ func (d *dice) rollDice(criticalHitAllowed bool, criticalHit int, criticalMiss i
 		value += rollValue
 	}
 
+	// If this is a debuff dice, negate the value
+	if d.isDebuff {
+		value = -value
+	}
+
 	roll := &singleRoll{
 		value:              value,
 		dice:               d,
@@ -461,15 +466,15 @@ func (r *roll) GetDice() Dice {
 	return r.dice
 }
 
-// Check checks if the value meets or exceeds the roll.
+// Check checks if the roll meets or exceeds the value.
 func (r *roll) Check(v Value) bool {
-	if v.IsCriticalHit() {
+	if r.IsCriticalHit() {
 		return true
 	}
-	if v.IsCriticalMiss() {
+	if r.IsCriticalMiss() {
 		return false
 	}
-	return v.Value() >= r.Value()
+	return r.Value() >= v.Value()
 }
 
 // GetAllRolls returns all rolls for the dice. If a dice is rolled with advantage or disadvantage
@@ -516,15 +521,15 @@ func (r *singleRoll) GetDice() Dice {
 	return r.dice
 }
 
-// Check checks if the value meets or exceeds the roll.
+// Check checks if the roll meets or exceeds the value.
 func (r *singleRoll) Check(v Value) bool {
-	if v.IsCriticalHit() {
+	if r.IsCriticalHit() {
 		return true
 	}
-	if v.IsCriticalMiss() {
+	if r.IsCriticalMiss() {
 		return false
 	}
-	return v.Value() >= r.Value()
+	return r.Value() >= v.Value()
 }
 
 // ReRoll returns a new roll of the dice.
@@ -562,6 +567,9 @@ func getDiceString(numDice, numSides, modifier int) string {
 			}
 			sb.WriteString(strconv.Itoa(modifier))
 		}
+	} else if numDice == 0 && numSides == 0 {
+		// For constant dice with value 0, return "0"
+		sb.WriteString("0")
 	}
 
 	return sb.String()
