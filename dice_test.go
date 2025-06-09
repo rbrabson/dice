@@ -64,14 +64,14 @@ func TestRollD20(t *testing.T) {
 
 		// Critical hit should be true only when value is 20
 		if r.IsCriticalHit() != (r.Value() == 20) {
-			t.Errorf("D20.Roll().IsCriticalHit() = %v; expected %v for value %d", 
-				r.IsCriticalHit(), (r.Value() == 20), r.Value())
+			t.Errorf("D20.Roll().IsCriticalHit() = %v; expected %v for value %d",
+				r.IsCriticalHit(), r.Value() == 20, r.Value())
 		}
 
 		// Critical miss should be true only when value is 1
 		if r.IsCriticalMiss() != (r.Value() == 1) {
-			t.Errorf("D20.Roll().IsCriticalMiss() = %v; expected %v for value %d", 
-				r.IsCriticalMiss(), (r.Value() == 1), r.Value())
+			t.Errorf("D20.Roll().IsCriticalMiss() = %v; expected %v for value %d",
+				r.IsCriticalMiss(), r.Value() == 1, r.Value())
 		}
 	}
 }
@@ -114,7 +114,7 @@ func TestNewConstant(t *testing.T) {
 
 			// Value should always be the constant
 			if r.Value() != tc.expected {
-				t.Errorf("NewConstant(%d).Roll().Value() = %d; expected %d", 
+				t.Errorf("NewConstant(%d).Roll().Value() = %d; expected %d",
 					tc.value, r.Value(), tc.expected)
 			}
 
@@ -131,7 +131,7 @@ func TestNewConstant(t *testing.T) {
 		// Test string representation
 		expectedStr := strconv.Itoa(tc.value)
 		if d.String() != expectedStr {
-			t.Errorf("NewConstant(%d).String() = %s; expected %s", 
+			t.Errorf("NewConstant(%d).String() = %s; expected %s",
 				tc.value, d.String(), expectedStr)
 		}
 	}
@@ -145,7 +145,7 @@ func TestDiceOptions(t *testing.T) {
 
 	// The source should be included in the string representation
 	if !strings.Contains(d.String(), sourceText) {
-		t.Errorf("Dice with source %q should include source in String(), got: %s", 
+		t.Errorf("Dice with source %q should include source in String(), got: %s",
 			sourceText, d.String())
 	}
 
@@ -159,7 +159,7 @@ func TestDiceOptions(t *testing.T) {
 
 		// Value should be between 1+modifier and 8+modifier
 		if r.Value() < 1+modifier || r.Value() > 8+modifier {
-			t.Errorf("Dice with modifier %d rolled %d; expected between %d and %d", 
+			t.Errorf("Dice with modifier %d rolled %d; expected between %d and %d",
 				modifier, r.Value(), 1+modifier, 8+modifier)
 		}
 	}
@@ -295,7 +295,7 @@ func TestSkillCheck(t *testing.T) {
 		// Verify that the check result matches the expected comparison
 		expectedPass := r1.Value() >= r2.Value()
 		if pass != expectedPass {
-			t.Errorf("Check result mismatch: got %v, expected %v (r1=%d, r2=%d)", 
+			t.Errorf("Check result mismatch: got %v, expected %v (r1=%d, r2=%d)",
 				pass, expectedPass, r1.Value(), r2.Value())
 		}
 
