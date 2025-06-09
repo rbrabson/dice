@@ -216,11 +216,12 @@ func TestDiceSetGetDice(t *testing.T) {
 	// Verify each dice is in the set
 	found1, found2, found3 := false, false, false
 	for _, d := range dice {
-		if d == d1 {
+		switch d {
+		case d1:
 			found1 = true
-		} else if d == d2 {
+		case d2:
 			found2 = true
-		} else if d == d3 {
+		case d3:
 			found3 = true
 		}
 	}
@@ -398,8 +399,8 @@ func TestRollSetReRoll(t *testing.T) {
 	// We can't directly compare dice sets, so we'll check if the dice set
 	// returned by GetDice() has the same properties as the original
 	diceFromRoll := r2.GetDice()
-	if diceFromRoll.NumDice() != d.NumDice() || 
-	   diceFromRoll.NumSides() != d.NumSides() {
+	if diceFromRoll.NumDice() != d.NumDice() ||
+		diceFromRoll.NumSides() != d.NumSides() {
 		t.Errorf("Expected re-roll to have dice with the same properties")
 	}
 }
@@ -455,8 +456,8 @@ func TestRollSetGetDice(t *testing.T) {
 	// We can't directly compare dice sets, so we'll check if the dice set
 	// returned by GetDice() has the same properties as the original
 	diceFromRoll := r.GetDice()
-	if diceFromRoll.NumDice() != d.NumDice() || 
-	   diceFromRoll.NumSides() != d.NumSides() {
+	if diceFromRoll.NumDice() != d.NumDice() ||
+		diceFromRoll.NumSides() != d.NumSides() {
 		t.Errorf("Expected roll to have dice with the same properties")
 	}
 }
