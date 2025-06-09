@@ -36,7 +36,7 @@ func (dc difficultyClass) IsCriticalMiss() bool {
 	return false
 }
 
-// Check determins if the value provided passes the skill check required by the DifficultyClass
+// Check determines if the value provided passes the skill check required by the DifficultyClass
 func (dc difficultyClass) Check(v Value) bool {
 	if v.IsCriticalHit() {
 		return true

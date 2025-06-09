@@ -5,9 +5,13 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rbrabson/dice/mathx"
 )
+
+// rng is a random number generator used for dice rolls
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 // Pre-defined dice types
 var (
@@ -51,10 +55,10 @@ const (
 
 const (
 	CriticalHit  = 20 // The value for a critical hit; this is the highest value that can be rolled on a D20
-	CriticalMiss = 1  // The value for a critical miss; this is the lowest value that can be rolled on a
+	CriticalMiss = 1  // The value for a critical miss; this is the lowest value that can be rolled on a D20
 )
 
-// Dice is a multi-sided ice that can be rolled for a value, both for a base value or with
+// Dice is a multi-sided dice that can be rolled for a value, both for a base value or with
 // advantage or disadvantage. The multi-sided dice also allows the source for the dice to be
 // included in the output.
 type Dice interface {
@@ -275,13 +279,13 @@ func (d *dice) Roll(opts ...RollOption) Roll {
 	switch r.rollType {
 	case RollWithAdvantage:
 		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
-		r.value = max(r.rolls[0].value, r.rolls[1].value)
+		r.value = max(r.rolls[0].Value(), r.rolls[1].Value())
 	case RollWithDisadvantage:
 		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss), d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
-		r.value = min(r.rolls[0].Value(), r.rolls[1].value)
+		r.value = min(r.rolls[0].Value(), r.rolls[1].Value())
 	default:
 		r.rolls = []*singleRoll{d.rollDice(r.criticalHitAllowed, r.criticalHit, r.criticalMiss)}
-		r.value = r.rolls[0].value
+		r.value = r.rolls[0].Value()
 	}
 
 	return r
@@ -327,10 +331,10 @@ func (d *dice) Source() string {
 func (d *dice) rollDice(criticalHitAllowed bool, criticalHit int, criticalMiss int) *singleRoll {
 	value := d.modifier
 	for range d.numDice {
-		rollValue := rand.Intn(d.numSides) + 1 // rand.Intn returns a value in the range [0, n), so we add 1 to get [1, n]
+		rollValue := rng.Intn(d.numSides) + 1 // rng.Intn returns a value in the range [0, n), so we add 1 to get [1, n]
 		if rollValue == 1 && d.isLucky {
 			// If the dice is lucky, re-roll if it rolls a 1
-			rollValue = rand.Intn(d.numSides) + 1
+			rollValue = rng.Intn(d.numSides) + 1
 		}
 		value += rollValue
 	}

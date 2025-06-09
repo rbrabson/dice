@@ -24,9 +24,17 @@ func (ds diceSet) IsConstant() bool {
 	return false
 }
 
-// IsDebuff returns `false` for the dice set, as it is not a debuff.
+// IsDebuff returns `true` if all dice in the set are debuffs, `false` otherwise.
 func (ds diceSet) IsDebuff() bool {
-	return false
+	if len(ds) == 0 {
+		return false
+	}
+	for _, d := range ds {
+		if !d.IsDebuff() {
+			return false
+		}
+	}
+	return true
 }
 
 // NumDice returns the number of dice in the first dice in the set.
@@ -89,8 +97,7 @@ func (ds diceSet) Roll(opts ...RollOption) Roll {
 
 // newRollSet creates a new set of rolls for the given diceSet.
 func newRollSet(diceSet diceSet) rollSet {
-	rollSet := make([]Roll, 0, len(diceSet))
-	return rollSet
+	return make([]Roll, 0, len(diceSet))
 }
 
 // Value returns the total value of the rolls in the roll set.
@@ -99,6 +106,21 @@ func (rs rollSet) Value() int {
 	for _, r := range rs {
 		value += r.Value()
 	}
+
+	// If all dice in the set are debuffs, the entire set is a debuff
+	// and the value should be negative
+	allDebuffs := true
+	for _, r := range rs {
+		if !r.GetDice().IsDebuff() {
+			allDebuffs = false
+			break
+		}
+	}
+
+	if allDebuffs && len(rs) > 0 && value > 0 {
+		value = -value
+	}
+
 	return value
 }
 
