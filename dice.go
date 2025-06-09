@@ -204,7 +204,7 @@ func ParseDice(str string, opts ...DiceOption) Dice {
 	return NewDice(numDice, numSides, modifiers...)
 }
 
-// Customize creates a new dice from an existing one, applying the provided options. the dice passed in
+// Customize creates a new dice from an existing one, applying the provided options. The dice passed in
 // is not modified, but a new dice is returned with the options applied. This allows for
 // creating a new dice based on an existing one, but with different options applied.
 func (d *dice) Customize(opts ...DiceOption) Dice {
