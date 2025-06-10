@@ -11,16 +11,17 @@ func Rotate[T any](slice []T, num int) []T {
 	// Get the length of the slice
 	length := len(slice)
 
+	var index int
 	if num < 0 {
-		num = (-num) % length
+		index = length - ((-num) % length)
 	} else {
-		num = num % length
+		index = num % length
 	}
 	// No rotation needed
-	if num == 0 {
+	if index == 0 {
 		return slice
 	}
 
 	// Move the last 'num' elements to the front
-	return append(slice[length-num:], slice[:length-num]...)
+	return append(slice[length-index:], slice[:length-index]...)
 }

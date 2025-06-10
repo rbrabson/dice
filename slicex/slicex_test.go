@@ -43,13 +43,13 @@ func TestRotateInt(t *testing.T) {
 			name:     "rotate by negative number",
 			slice:    []int{1, 2, 3, 4, 5},
 			num:      -1,
-			expected: []int{5, 1, 2, 3, 4},
+			expected: []int{2, 3, 4, 5, 1},
 		},
 		{
 			name:     "rotate by negative number with absolute value greater than length",
 			slice:    []int{1, 2, 3, 4, 5},
 			num:      -6,
-			expected: []int{5, 1, 2, 3, 4},
+			expected: []int{2, 3, 4, 5, 1},
 		},
 	}
 
@@ -80,7 +80,7 @@ func TestRotateString(t *testing.T) {
 			name:     "rotate string slice by negative number",
 			slice:    []string{"a", "b", "c", "d", "e"},
 			num:      -1,
-			expected: []string{"e", "a", "b", "c", "d"},
+			expected: []string{"b", "c", "d", "e", "a"},
 		},
 	}
 
