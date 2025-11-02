@@ -48,9 +48,10 @@ var (
 type RollType int
 
 const (
-	RollOnce             RollType = iota // Single dice is rolled
-	RollWithAdvantage                    // Two dice are rolled, the highest value is used
-	RollWithDisadvantage                 // Two dice are rolled, the lowest value is used
+	_                    RollType = iota
+	RollOnce                      // Single dice is rolled
+	RollWithAdvantage             // Two dice are rolled, the highest value is used
+	RollWithDisadvantage          // Two dice are rolled, the lowest value is used
 )
 
 const (
@@ -89,7 +90,7 @@ type Roll interface {
 	Str() string                  // Returns a string representation of the roll, but without the final value
 }
 
-// dice is an implementation of the Dice interface
+// dice is an implementation of the Dice interface.
 type dice struct {
 	numDice  int    // The number of dice to roll
 	numSides int    // The number of sides on the dice
